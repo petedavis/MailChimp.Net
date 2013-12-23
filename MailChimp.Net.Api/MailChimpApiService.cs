@@ -60,14 +60,18 @@ namespace MailChimp.Net.Api
             return serviceResponse;
         }
 
+
         public ServiceResponse Subscribe(string email, bool doubleOptIn)
         {
-            var res = Subscribe(email, null, null, doubleOptIn);
+            return Subscribe(email, MailChimpServiceConfiguration.Settings.SubscriberListId, doubleOptIn);
+        }
+        public ServiceResponse Subscribe(string email, string subsciberListId, bool doubleOptIn)
+        {
+            var res = Subscribe(email, subsciberListId, null, null, doubleOptIn);
             return res;
         }
-
-
-        private ServiceResponse SubscribeWithMergeVars(string email, dynamic mergeVars, bool enableDoubleOptIn)
+        
+        private ServiceResponse SubscribeWithMergeVars(string email, string subscriberListId, dynamic mergeVars, bool enableDoubleOptIn)
         {
             ServiceResponse serviceResponse = new ServiceResponse();
             var urlTemplate = String.Format("{0}{1}/subscribe.json/", MailChimpServiceConfiguration.Settings.ServiceUrl,
@@ -76,7 +80,7 @@ namespace MailChimp.Net.Api
             var subscriber = new Subscriber();
             subscriber.DoubleOptIn = enableDoubleOptIn;
             subscriber.ApiKey = _apiKey;
-            subscriber.ListId = MailChimpServiceConfiguration.Settings.SubscriberListId;
+            subscriber.ListId = subscriberListId;
             var emailObject = new Email { EmailValue = email };
             subscriber.Email = emailObject;
             subscriber.UpdateExisting = true;
@@ -111,6 +115,11 @@ namespace MailChimp.Net.Api
 
         public ServiceResponse Subscribe(string email, List<Grouping> groupings, Dictionary<string, string> fields, bool enableDoubleOptIn)
         {
+            return Subscribe(email,  MailChimpServiceConfiguration.Settings.SubscriberListId, groupings, fields, enableDoubleOptIn);
+        }
+
+        public ServiceResponse Subscribe(string email, string subsciberListId, List<Grouping> groupings, Dictionary<string, string> fields, bool enableDoubleOptIn)
+        {
             dynamic mergeVars = new Dictionary<string, Object>();
             mergeVars.Add("groupings", groupings);
 
@@ -120,12 +129,17 @@ namespace MailChimp.Net.Api
                 //http://stackoverflow.com/questions/4938397/dynamically-adding-properties-to-an-expandoobject
                 mergeVars.Add(nameValue.Key, nameValue.Value);
             }
-            var response = this.SubscribeWithMergeVars(String.Format(email), mergeVars, enableDoubleOptIn);
+            var response = this.SubscribeWithMergeVars(String.Format(email), subsciberListId, mergeVars, enableDoubleOptIn);
 
             return response;
         }
-
+        
         public ServiceResponse Unsubscribe(string email)
+        {
+            return Unsubscribe(email, MailChimpServiceConfiguration.Settings.SubscriberListId);
+        }
+
+        public ServiceResponse Unsubscribe(string email, string subsciberListId)
         {
             ServiceResponse serviceResponse = new ServiceResponse();
             var urlTemplate = String.Format("{0}{1}/unsubscribe.json/", MailChimpServiceConfiguration.Settings.ServiceUrl,
@@ -134,7 +148,7 @@ namespace MailChimp.Net.Api
             var subscriber = new Subscriber();
 
             subscriber.ApiKey = _apiKey;
-            subscriber.ListId = MailChimpServiceConfiguration.Settings.SubscriberListId;
+            subscriber.ListId = subsciberListId;
             var emailObject = new Email { EmailValue = email };
             subscriber.Email = emailObject;
             subscriber.UpdateExisting = true;
